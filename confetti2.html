@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Canvas test</title>
+  <script type="text/javascript">
+(function() {
+  function Confetti(style, x) {
+    this.style = style;
+    this.y = 0;
+    this.x = x;
+  }
+  Confetti.prototype = {
+    paint: function(a) {
+      a.fillBox(this.x, this.y, this.style);
+    },
+    clear: function(a) {
+      a.clearBox(this.x, this.y);
+    },
+  };
+  
+  function Shower(style, standoff, duration, intensity, x, w) {
+    this.style = style;
+    this.standoff = standoff;
+    this.duration = duration;
+    this.intensity = intensity;
+    this.x = x;
+    this.w = w;
+    
+    this.fractional = 0;
+  }
+  Shower.prototype = {
+    addConfetti: function(arena) {
+      if (this.standoff > 0) {
+        --this.standoff;
+        return true;
+      }
+      
+      this.fractional += this.intensity;
+      while (this.fractional >= 1) {
+        --this.fractional;
+        var x;
+        for (var i = 0; i < this.w; ++i) { // try to find a column with room
+          x = this.x + arena.rand(this.w);
+          if (!arena.get(x, 0))
+            break;
+        }
+        if (arena.get(x, 0)) // couldn't find room, just skip it
+          continue;
+        
+        arena.addConfetti(new Confetti(arena.nudgeColor(this.style), x));
+      }
+      
+      return this.duration-- > 0;
+    },
+    hasRoom: function(arena) {
+      for (var i = 0; i <= this.w; ++i) {
+        if (!arena.get(this.x + i, 0))
+          return true;
+      }
+      return false;
+    }
+  };
+  
+  function Arena(id) {
+    var canvas = document.getElementById(id);
+    this.context = canvas.getContext("2d");
+    this.boxSize = 2;
+    this.colorRE = /^\#(..)(..)(..)$/;
+    this.background = "black";
+  
+    this.width = Math.floor(canvas.width / this.boxSize);
+    this.height = Math.floor(canvas.height / this.boxSize);
+    this.boxes = new Array(this.width * this.height);
+    
+    this.confettiColors = ["white", "lime", "red", "yellow", "aqua", "fuchsia", "blue"];
+    this.confetti = [];
+    this.showers = [];    
+    
+    this.clear();
+    this.addBlocks();
+    this.animate();
+  }
+  Arena.prototype = {
+    clear: function() {
+      this.context.fillStyle = this.background;
+      this.context.fillRect(0, 0, this.context.canvas.width,
+        this.context.canvas.height);
+    },
+    fillBox: function(x, y, style) {
+      this.context.fillStyle = style;
+      this.context.fillRect(x * this.boxSize, y * this.boxSize,
+        this.boxSize, this.boxSize);
+    },
+    clearBox: function(x, y) {
+      this.fillBox(x, y, this.background);
+    },
+    // Make a color a bit lighter or darker
+    nudgeColor: function(style) {
+      // Get serialization
+      this.context.fillStyle = style;
+      style = this.context.fillStyle;
+
+      var nudge = 20; // percent
+      var scale = 1 + (-nudge + this.rand(2 * nudge + 1)) / 100;
+      
+      var result = '#';
+      match = this.colorRE.exec(style);
+      for (var i = 0; i < 3; ++i) {
+        var hex = match[i + 1];
+        var v = Math.round(scale * parseInt(hex, 16));
+        if (v < 0) v = 0;
+        if (v > 255) v = 255;
+        
+        hex = v.toString(16);
+        if (hex.length < 2)
+          result += '0';
+        result += hex;
+      }
+      return result;
+    },
+      
+    animate: function() {
+      var interval = 15;
+      var arena = this;
+      window.setInterval(function() { arena.frame(); }, interval);
+    },
+    
+    rand: function(i) {
+      return Math.floor(Math.random() * i);
+    },
+    
+    index: function(x, y) {
+      return x * this.width + y;
+    },
+    get: function(x, y) {
+      return this.boxes[this.index(x, y)];
+    },
+    set: function(x, y, c) {
+      this.boxes[this.index(x, y)] = c;
+    },
+    moveConfetti: function(c, x, y) {
+      c.clear(this);
+      this.set(c.x, c.y, null);
+      c.x = x;
+      c.y = y;
+      this.set(x, y, c);
+      c.paint(this);
+    },    
+    addConfetti: function(c) {
+      this.set(c.x, 0, c);
+      c.paint(this);
+      this.confetti.push(c);
+    },
+    
+    trySideways: function(c, dir) {
+      var x = c.x + dir;
+      if (x < 0 || x >= this.width)
+        return false;
+      if (this.get(x, c.y) || this.get(x, c.y + 1))
+        return false;
+      this.moveConfetti(c, x, c.y + 1);
+      return true;
+    },
+    confettiFrame: function() {
+      var next = [];
+      
+      for (var i in this.confetti) {
+        var c = this.confetti[i];
+        var stopped = false;
+        
+        if (c.y >= this.height - 1) {
+          continue;
+        } else if (!this.get(c.x, c.y + 1)) {
+          this.moveConfetti(c, c.x, c.y + 1);
+        } else {
+          var dir = 2 * this.rand(2) - 1; // -1 or 1
+          if (!this.trySideways(c, dir) && !this.trySideways(c, -dir))
+            stopped = true;
+        }
+        
+        if (!stopped)
+          next.push(c);
+      }
+      this.confetti = next;
+    },
+    
+    createShower: function(frac) {
+      var standoff = 30, duration = 400, intensity = 0.4, overlap = -100;
+      //var standoff = 10, duration = 200, intensity = 0.8, overlap = -150;
+      var color = this.confettiColors[this.rand(this.confettiColors.length)];
+      var w = Math.floor(Math.min(this.width / 2, 60));
+      
+      // Allow a shower to overlap the side, so we're not too middle-biased
+      var x = -overlap + this.rand(this.width - w + 2 * overlap);
+      w = Math.min(w, this.width - x);
+      x = Math.max(x, 0);
+      
+      return new Shower(color, standoff, duration * frac, intensity, x, w);
+    },
+    showerConfetti: function() {
+      var count = 1;
+      
+      while (this.showers.length < count) {
+        var s = this.createShower((this.showers.length + 1) / count);
+        if (s.hasRoom(this))
+          this.showers.push(s);
+      }
+      
+      var next = [];
+      for (var i = 0; i < this.showers.length; ++i) {
+        var s = this.showers[i];
+        if (s.addConfetti(this))
+          next.push(s);
+      }
+      this.showers = next;
+    },
+    
+    addBlocks: function() {
+      var block = "block", style = "gray";
+      var height = 7, vsep = 13, vlimit = 30;
+      var margin = 5, sep = 5, min = 12, max = 25;
+      vsep = 19; sep = 9; max = 60; min = 10;
+      //vsep = 28; sep = 15; max = 40; min = 10;
+      
+      var top, bottom = 10; // top margin
+      while (true) {
+        top = bottom + vsep;
+        var bottom = top + height;
+        if (this.height - bottom < vlimit)
+          break; // Don't get too close to bottom
+        
+        // Find appropriate horiz spaces
+        var space = this.width - 2 * margin, blocks = [];
+        while (true) {
+          var b = min + this.rand(max - min);
+          if (b > space)
+            break;
+          if (blocks.length != 0)
+            space -= sep;
+          blocks.push(b);
+          space -= b;
+        }
+        
+        // Build blocks
+        var x = margin;
+        while (blocks.length > 0) {
+          var b = blocks.shift();
+          
+          // Draw the block
+          for (var i = x; i < x + b; ++i) {
+            for (var j = top; j < bottom; ++j) {
+              this.set(i, j, block);
+              this.fillBox(i, j, style);
+            }
+          }
+          
+          // Justify blocks, by using extra space in between
+          var just = blocks.length > 0 ? Math.floor(space / blocks.length) : 0;
+          space -= just;
+          x += b + sep + just;
+        }
+      }
+    },
+    
+    frame: function() {
+      var skip = 1;
+      for (var i = 0; i <= skip; ++i) {
+        this.confettiFrame();
+        this.showerConfetti();
+      }
+    },
+    
+  };
+  
+  window.onload = function() {
+    new Arena("canvas");
+  };
+}());
+  </script>
+</head>
+<body>
+  <canvas id="canvas" width="900" height="700"></canvas>
+</body>
+</html>
