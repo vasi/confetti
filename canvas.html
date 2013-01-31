@@ -210,21 +210,31 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         return arena.nudgeColor(color);
       };
     },
-    hsv: function(h) {
-      // given zero hue of color, and a hue, return color intensity at that hue
-      function c(z, h) {
-        var d = h - z;
-        d = d - Math.floor(d);
-        var v = 0;
-        if (d < 1/6) v = 6*d;
-        else if (d < 1/2) v = 1;
-        else if (d < 2/3) v = 4 - 6*d;
-        v = Math.round(255 * v);
-        var x = v.toString(16);
-        if (x.length < 2) return '0' + x;
-        return x;
+    hsv: function(h, s, v) {
+      var chr = s * v;
+      var hp = (6 * h) % 6;
+      var sec = chr * (1 - Math.abs(hp % 2 - 1));
+      var rgb;
+      switch (Math.floor(hp)) {
+        case 0: rgb = [chr, sec,   0]; break;
+        case 1: rgb = [sec, chr,   0]; break;
+        case 2: rgb = [  0, chr, sec]; break;
+        case 3: rgb = [  0, sec, chr]; break;
+        case 4: rgb = [sec,   0, chr]; break;
+        case 5: rgb = [chr,   0, sec]; break;
       }
-      return '#' + c(2/3, h) + c(0, h) + c(1/3, h);
+
+      var add = v - chr;
+      var r = '#';
+      for (var i = 0; i < 3; ++i) {
+        var c = Math.round(255 * (rgb[i] + add));
+        var s = c.toString(16);
+        if (s.length < 2) {
+          r += '0';
+        }
+        r += s;
+      }
+      return r;
     },
     rainbowColorFactory: function() {
       var arena = this;
@@ -232,7 +242,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       return function(x) {
         if (cache[x]) return cache[x];
         var h = x / arena.width;
-        var c = arena.hsv(2*h + 5/6); // root is magenta
+        var c = arena.hsv(2*h + 5/6, 1, 1); // root is magenta
         return (cache[x] = c);
       }
     },
@@ -243,11 +253,11 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       var arena = this;
       return function(x) {
         ++arena.count;
-        return arena.hsv(5/6 + arena.count / (600 * 1000));
+        return arena.hsv(5/6 + arena.count / (600 * 1000), 1, 1);
       };
     },
     colorFactory: function() {
-      return this.nudgeColorFactory();
+      return this.rainbowColorFactory();
     },
     createShower: function(frac) {
       //var standoff = 20, duration = 400, intensity = 0.4, overlap = -100;
