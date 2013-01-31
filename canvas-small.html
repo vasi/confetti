@@ -111,7 +111,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
 
     animate: function() {
-      var interval = 30;
+      var interval = 15;
       var arena = this;
       this.intervalID = window.setInterval(function() { arena.frame(); }, interval);
     },
@@ -247,7 +247,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       };
     },
     colorFactory: function() {
-      return this.rotateColorFactory();
+      return this.nudgeColorFactory();
     },
     createShower: function(frac) {
       //var standoff = 20, duration = 400, intensity = 0.4, overlap = -100;
@@ -291,7 +291,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       var top, bottom = 10; // top margin
       while (true) {
         top = bottom + vsep;
-        var bottom = top + height;
+        bottom = top + height;
         if (this.height - bottom < vlimit)
           break; // Don't get too close to bottom
 
@@ -329,7 +329,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
 
     frame: function() {
-      var skip = 6;
+      var skip = 1;
       for (var i = 0; i <= skip; ++i) {
         this.confettiFrame();
         this.showerConfetti();
@@ -346,5 +346,6 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 </head>
 <body>
   <canvas id="canvas" width="1280" height="798"></canvas>
+  <!--canvas id="canvas" width="1680" height="1048"></canvas-->
 </body>
 </html>
