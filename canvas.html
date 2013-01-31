@@ -68,7 +68,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   function Arena(id) {
     var canvas = document.getElementById(id);
     this.context = canvas.getContext("2d");
-    this.boxSize = 1;
+    this.boxSize = 2;
     this.colorRE = /^\#(..)(..)(..)$/;
     this.background = "black";
 
@@ -211,6 +211,8 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       };
     },
     hsv: function(h, s, v) {
+      s = Math.max(0, Math.min(s, 1));
+      v = Math.max(0, Math.min(v, 1));
       var chr = s * v;
       var hp = (6 * h) % 6;
       var sec = chr * (1 - Math.abs(hp % 2 - 1));
@@ -251,13 +253,15 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         this.count = 0;
       }
       var arena = this;
+      var rotation = 6000;
       return function(x) {
         ++arena.count;
-        return arena.hsv(5/6 + arena.count / (600 * 1000), 1, 1);
+        return arena.hsv(5/6 + arena.count / rotation,
+          1 - arena.count / rotation / 5, 1);
       };
     },
     colorFactory: function() {
-      return this.rainbowColorFactory();
+      return this.rotateColorFactory();
     },
     createShower: function(frac) {
       //var standoff = 20, duration = 400, intensity = 0.4, overlap = -100;
@@ -339,7 +343,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
 
     frame: function() {
-      var skip = 1;
+      var skip = 10;
       for (var i = 0; i <= skip; ++i) {
         this.confettiFrame();
         this.showerConfetti();
