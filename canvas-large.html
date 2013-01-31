@@ -48,8 +48,8 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
           if (!arena.get(x, 0))
             break;
         }
-        if (arena.get(x, 0)) // couldn't find room, just skip it
-          continue;
+        if (arena.get(x, 0)) // couldn't find room, kill this shower
+          return false;
         
         arena.addConfetti(new Confetti(arena.nudgeColor(this.style), x));
       }
