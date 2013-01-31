@@ -71,6 +71,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     this.boxSize = 1;
     this.colorRE = /^\#(..)(..)(..)$/;
     this.background = "black";
+    this.clearColor = "#333";
     this.sideSpace = true;
 
     this.width = Math.floor(canvas.width / this.boxSize);
@@ -108,7 +109,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         this.boxSize, this.boxSize);
     },
     clearBox: function(x, y) {
-      this.fillBox(x, y, this.background);
+      this.fillBox(x, y, this.clearColor);
     },
 
     animate: function() {
