@@ -71,7 +71,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     this.boxSize = 1;
     this.colorRE = /^\#(..)(..)(..)$/;
     this.background = "black";
-    this.clearColor = "#333";
+    this.clearColor = "black";
     this.sideSpace = true;
 
     this.width = Math.floor(canvas.width / this.boxSize);
@@ -83,6 +83,9 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 
     this.clear();
     this.addBlocks();
+
+    this.interval = Math.round(1/24);
+    this.skip = 1;
 
 	this.intervalID = null;
 	var self = this;
@@ -113,9 +116,9 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
 
     animate: function() {
-      var interval = 15;
       var arena = this;
-      this.intervalID = window.setInterval(function() { arena.frame(); }, interval);
+      this.intervalID = window.setInterval(function() { arena.frame(); },
+        this.interval);
     },
 
     rand: function(i) {
@@ -263,7 +266,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       };
     },
     colorFactory: function() {
-      return this.rotateColorFactory();
+      return this.nudgeColorFactory();
     },
     createShower: function(frac) {
       //var standoff = 20, duration = 400, intensity = 0.4, overlap = -100;
@@ -300,15 +303,15 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
 
     addBlocks: function() {
-      var block = "block", style = "gray";
+      var block = "block", style = "#999";
       var height = 7, vsep = 13, vlimit = 30;
       var margin = 0, sep = 5, min = 12, max = 25;
       //vsep = 19; sep = 9; max = 60; min = 10;
-      vsep = 16; vlimit = vsep; sep = 10; max = 52; min = 11;
+      vsep = 14; vlimit = 25; sep = 8; max = 44; min = 10;
 
       if (this.sideSpace)
         margin += 5;
-      var top, bottom = 80; // top margin
+      var top, bottom = 15; // top margin
       while (true) {
         top = bottom + vsep;
         bottom = top + height;
@@ -349,8 +352,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
 
     frame: function() {
-      var skip = 10;
-      for (var i = 0; i <= skip; ++i) {
+      for (var i = 0; i <= this.skip; ++i) {
         this.confettiFrame();
         this.showerConfetti();
       }
