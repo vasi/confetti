@@ -74,6 +74,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     this.clearColor = "black";
     this.sideSpace = false;
     this.speed = 100;
+    this.frameClamp = 25;
 
     this.width = Math.floor(canvas.width / this.boxSize);
     this.height = Math.floor(canvas.height / this.boxSize);
@@ -117,14 +118,18 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       var arena = this;
       this.step = function() { req(function(t) { arena.animateStep(t) }) };
 
+      this.frameTime = 1000 / this.speed;
       this.lastFrame = window.mozAnimationStartTime || Date.now();
       this.step();
     },
 
     animateStep: function(timestamp) {
-      for (; this.lastFrame < timestamp; this.lastFrame += 1000 / this.speed) {
+      var steps = 0;
+      while (steps < this.frameClamp && this.lastFrame < timestamp) {
         this.confettiFrame();
         this.showerConfetti();
+        this.lastFrame += this.frameTime;
+        ++steps;
       }
       if (this.isAnimating)
         this.step();
