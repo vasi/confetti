@@ -73,6 +73,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     this.background = "black";
     this.clearColor = "black";
     this.sideSpace = false;
+    this.speed = 100;
 
     this.width = Math.floor(canvas.width / this.boxSize);
     this.height = Math.floor(canvas.height / this.boxSize);
@@ -84,20 +85,13 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     this.clear();
     this.addBlocks();
 
-    this.interval = Math.round(1000/48);
-    this.skip = 1;
-
-	this.intervalID = null;
-	var self = this;
-	canvas.addEventListener('click', function(e) {
-		if (self.intervalID) {
-			window.clearInterval(self.intervalID);
-			self.intervalID = null;
-		} else {
-			self.animate();
-		}
-	}, false);
-
+    var self = this;
+    canvas.addEventListener('click', function(e) {
+      self.isAnimating = !self.isAnimating;
+      if (self.isAnimating)
+        self.animate();
+	  }, false);
+    this.isAnimating = true;
     this.animate();
   }
   Arena.prototype = {
@@ -116,9 +110,24 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
 
     animate: function() {
+      var req = window.requestAnimationFrame
+        || window.mozRequestAnimationFrame
+        || window.webkitRequestAnimationFrame
+        || window.msRequestAnimationFrame;
       var arena = this;
-      this.intervalID = window.setInterval(function() { arena.frame(); },
-        this.interval);
+      this.step = function() { req(function(t) { arena.animateStep(t) }) };
+
+      this.lastFrame = window.mozAnimationStartTime || Date.now();
+      this.step();
+    },
+
+    animateStep: function(timestamp) {
+      for (; this.lastFrame < timestamp; this.lastFrame += 1000 / this.speed) {
+        this.confettiFrame();
+        this.showerConfetti();
+      }
+      if (this.isAnimating)
+        this.step();
     },
 
     rand: function(i) {
@@ -350,14 +359,6 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         }
       }
     },
-
-    frame: function() {
-      for (var i = 0; i <= this.skip; ++i) {
-        this.confettiFrame();
-        this.showerConfetti();
-      }
-    },
-
   };
 
   window.onload = function() {
