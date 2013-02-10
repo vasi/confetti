@@ -72,7 +72,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     this.colorRE = /^\#(..)(..)(..)$/;
     this.background = "black";
     this.clearColor = "black";
-    this.sideSpace = true;
+    this.sideSpace = false;
 
     this.width = Math.floor(canvas.width / this.boxSize);
     this.height = Math.floor(canvas.height / this.boxSize);
@@ -84,7 +84,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     this.clear();
     this.addBlocks();
 
-    this.interval = Math.round(1/24);
+    this.interval = Math.round(1000/48);
     this.skip = 1;
 
 	this.intervalID = null;
@@ -206,7 +206,7 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     },
     nudgeColorFactory: function() {
       var colors = ["white", "lime", "red", "yellow", "aqua", "fuchsia",
-         "#39F", // blue
+         "#36F", // blue
          "#F93", // orange
       ];
       var color = colors[this.rand(colors.length)];
@@ -368,6 +368,6 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 </head>
 <body>
   <canvas id="canvas" width="1280" height="798"></canvas>
-  <!--canvas id="canvas" width="1680" height="1048"></canvas-->
+  <!-- <canvas id="canvas" width="1680" height="1048"></canvas> -->
 </body>
 </html>
