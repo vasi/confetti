@@ -114,18 +114,28 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       var req = window.requestAnimationFrame
         || window.mozRequestAnimationFrame
         || window.webkitRequestAnimationFrame
-        || window.msRequestAnimationFrame;
+        || window.msRequestAnimationFrame
+        || function(f) { setTimeout(f, 30) };
       var arena = this;
       this.step = function() { req(function(t) { arena.animateStep(t) }) };
 
       this.frameTime = 1000 / this.speed;
-      this.lastFrame = window.mozAnimationStartTime
+      this.lastFrame = this.animationTime();
+      this.step();
+    },
+    animationTime: function() {
+      return window.mozAnimationStartTime
         || (window.performance && window.performance.now())
         || Date.now();
-      this.step();
     },
 
     animateStep: function(timestamp) {
+      if (!timestamp) {
+        timestamp = this.animationTime();
+      }
+      if (this.isAnimating)
+        this.step();
+
       var steps = 0;
       while (steps < this.frameClamp && this.lastFrame < timestamp) {
         this.confettiFrame();
@@ -133,8 +143,6 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         this.lastFrame += this.frameTime;
         ++steps;
       }
-      if (this.isAnimating)
-        this.step();
     },
 
     rand: function(i) {
