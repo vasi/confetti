@@ -119,7 +119,9 @@ body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
       this.step = function() { req(function(t) { arena.animateStep(t) }) };
 
       this.frameTime = 1000 / this.speed;
-      this.lastFrame = window.mozAnimationStartTime || Date.now();
+      this.lastFrame = window.mozAnimationStartTime
+        || (window.performance && window.performance.now())
+        || Date.now();
       this.step();
     },
 
