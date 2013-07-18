@@ -149,6 +149,18 @@ html, body, div, canvas { margin: 0; padding: 0; display: block; }
     rand: function(i) {
       return Math.floor(Math.random() * i);
     },
+    normal: function() {
+		// Box-Muller transform
+		var u = Math.random(), v = Math.random();
+		return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+	},
+	normalClamp : function(mu, sig, lo, hi) {
+		while (true) {
+			var n = sig * this.normal() + mu;
+			if (n >= lo && n <= hi)
+				return n;
+		}
+	},
 
     index: function(x, y) {
       return y * this.width + x;
@@ -302,7 +314,9 @@ html, body, div, canvas { margin: 0; padding: 0; display: block; }
       var w = Math.floor(Math.min(this.width / 2, maxWidth));
 
       // Allow a shower to overlap the side, so we're not too middle-biased
-      var x = -overlap + this.rand(this.width - w + 2 * overlap);
+      var wuse = this.width - w + 2 * overlap;
+      var pos = this.normalClamp(0.5, 0.2, 0, 1);
+      var x = -overlap + Math.floor(pos * wuse);
       w = Math.min(w, this.width - x);
       x = Math.max(x, 0);
 
