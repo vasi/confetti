@@ -74,7 +74,7 @@ html, body, div, canvas { margin: 0; padding: 0; display: block; }
     this.background = "black";
     this.clearColor = "black";
     this.sideSpace = false;
-    this.speed = 100;
+    this.speed = 150;
     this.frameClamp = 25;
 
     this.width = Math.floor(canvas.width / this.boxSize);
@@ -150,17 +150,26 @@ html, body, div, canvas { margin: 0; padding: 0; display: block; }
       return Math.floor(Math.random() * i);
     },
     normal: function() {
-		// Box-Muller transform
-		var u = Math.random(), v = Math.random();
-		return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-	},
-	normalClamp : function(mu, sig, lo, hi) {
-		while (true) {
-			var n = sig * this.normal() + mu;
-			if (n >= lo && n <= hi)
-				return n;
-		}
-	},
+		  // Box-Muller transform
+		  var u = Math.random(), v = Math.random();
+		  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+	  },
+  	normalClamp : function(mu, sig, lo, hi) {
+  		while (true) {
+  			var n = sig * this.normal() + mu;
+  			if (n >= lo && n <= hi)
+  				return n;
+  		}
+  	},
+    expClamp: function(mean, gamma, lo, hi) {
+      while (true) {
+        var r = Math.random() - 0.5;
+        var sign = (r < 0 ? -1.0 : 1.0);
+        var t = sign * Math.log(2 * Math.abs(r)) / gamma + mean;
+  			if (t >= lo && t <= hi)
+  				return t;
+      }
+    },
 
     index: function(x, y) {
       return y * this.width + x;
@@ -303,7 +312,7 @@ html, body, div, canvas { margin: 0; padding: 0; display: block; }
       };
     },
     colorFactory: function() {
-      return this.nudgeColorFactory();
+      return this.rainbowColorFactory();
     },
     createShower: function(frac) {
       //var standoff = 20, duration = 400, intensity = 0.4, overlap = -100;
@@ -315,7 +324,7 @@ html, body, div, canvas { margin: 0; padding: 0; display: block; }
 
       // Allow a shower to overlap the side, so we're not too middle-biased
       var wuse = this.width - w + 2 * overlap;
-      var pos = this.normalClamp(0.5, 0.2, 0, 1);
+      var pos = this.expClamp(0.5, 6, 0, 1);
       var x = -overlap + Math.floor(pos * wuse);
       w = Math.min(w, this.width - x);
       x = Math.max(x, 0);
@@ -346,11 +355,11 @@ html, body, div, canvas { margin: 0; padding: 0; display: block; }
       var height = 7, vsep = 13, vlimit = 30;
       var margin = 0, sep = 5, min = 12, max = 25;
       //vsep = 19; sep = 9; max = 60; min = 10;
-      vsep = 14; vlimit = 25; sep = 8; max = 44; min = 10;
+      vsep = 14; vlimit = 25; sep = 8; max = 32; min = 9;
 
       if (this.sideSpace)
         margin += 5;
-      var top, bottom = 15; // top margin
+      var top, bottom = 30; // top margin
       while (true) {
         top = bottom + vsep;
         bottom = top + height;
